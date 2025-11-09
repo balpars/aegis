@@ -8,15 +8,27 @@
 }
 
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
+  font-family: var(--font-primary, 'Inter'), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", sans-serif;
   line-height: 1.6;
-  color: #333;
+  color: var(--text-primary, #333);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .navbar-brand {
-  font-weight: 700;
+  font-weight: 800;
   font-size: 1.5rem;
+  letter-spacing: -0.5px;
+  font-family: var(--font-primary, 'Inter'), sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navbar-brand img {
+  height: 40px;
+  width: auto;
 }
 
 .btn {
@@ -64,6 +76,8 @@ body {
   max-height: 200px;
   overflow-y: auto;
   border-radius: 0.5rem;
+  font-family: var(--font-mono, 'JetBrains Mono'), 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-weight: 500;
 }
 
 .badge {

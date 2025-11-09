@@ -1,0 +1,93 @@
+{
+  "CWE-79": {
+    "name": "Cross-site Scripting (XSS)",
+    "description": "Improper neutralization of input during web page generation",
+    "patterns": ["unsanitized user input in HTML output", "innerHTML assignment", "document.write with user data"],
+    "remediation": "Use context-aware encoding, Content Security Policy, and avoid innerHTML with user data"
+  },
+  "CWE-89": {
+    "name": "SQL Injection",
+    "description": "Improper neutralization of special elements used in an SQL command",
+    "patterns": ["string concatenation in SQL queries", "raw SQL with user input", "execute() with format strings"],
+    "remediation": "Use parameterized queries, prepared statements, or ORM methods"
+  },
+  "CWE-78": {
+    "name": "OS Command Injection",
+    "description": "Improper neutralization of special elements used in an OS command",
+    "patterns": ["system() calls with user input", "subprocess with shell=True", "os.popen with user data"],
+    "remediation": "Use subprocess without shell, validate and sanitize input, use allowlists"
+  },
+  "CWE-22": {
+    "name": "Path Traversal",
+    "description": "Improper limitation of a pathname to a restricted directory",
+    "patterns": ["file operations with user-controlled paths", "open() with user input", "path.join without validation"],
+    "remediation": "Validate and sanitize paths, use absolute paths with allowlists, chroot when possible"
+  },
+  "CWE-502": {
+    "name": "Deserialization of Untrusted Data",
+    "description": "Deserialization of untrusted data without proper validation",
+    "patterns": ["pickle.loads() with user data", "yaml.load() with user input", "unmarshal() with untrusted data"],
+    "remediation": "Avoid deserializing untrusted data, use safe serialization formats (JSON), validate schemas"
+  },
+  "CWE-352": {
+    "name": "Cross-Site Request Forgery (CSRF)",
+    "description": "Missing or improper validation of CSRF tokens",
+    "patterns": ["state-changing operations without CSRF tokens", "missing SameSite cookie attributes"],
+    "remediation": "Implement CSRF tokens, use SameSite cookies, verify origin headers"
+  },
+  "CWE-434": {
+    "name": "Unrestricted Upload of File with Dangerous Type",
+    "description": "Upload of file with dangerous type without proper validation",
+    "patterns": ["file upload without type validation", "executable file uploads", "no file extension checks"],
+    "remediation": "Validate file types, use allowlists, scan for malware, store outside web root"
+  },
+  "CWE-798": {
+    "name": "Use of Hard-coded Credentials",
+    "description": "Use of hard-coded credentials in source code",
+    "patterns": ["passwords in source code", "API keys in code", "database credentials hardcoded"],
+    "remediation": "Use environment variables, secrets management, credential rotation"
+  },
+  "CWE-327": {
+    "name": "Use of a Broken or Risky Cryptographic Algorithm",
+    "description": "Use of broken or risky cryptographic algorithm",
+    "patterns": ["MD5 or SHA1 for security", "DES encryption", "weak random number generators"],
+    "remediation": "Use modern algorithms (AES-256, SHA-256+), secure random generators, proper key management"
+  },
+  "CWE-306": {
+    "name": "Missing Authentication for Critical Function",
+    "description": "Missing authentication for a function that requires authentication",
+    "patterns": ["admin endpoints without auth", "sensitive operations without login", "missing auth checks"],
+    "remediation": "Require authentication for all sensitive operations, implement proper session management"
+  },
+  "CWE-862": {
+    "name": "Missing Authorization",
+    "description": "Missing authorization check for sensitive operations",
+    "patterns": ["operations without permission checks", "missing role-based access control", "direct object references"],
+    "remediation": "Implement authorization checks, use role-based access control, validate permissions"
+  },
+  "CWE-311": {
+    "name": "Missing Encryption of Sensitive Data",
+    "description": "Failure to encrypt sensitive data",
+    "patterns": ["plaintext passwords", "unencrypted PII", "sensitive data in logs"],
+    "remediation": "Encrypt sensitive data at rest and in transit, use strong encryption, protect keys"
+  },
+  "CWE-400": {
+    "name": "Uncontrolled Resource Consumption",
+    "description": "Uncontrolled resource consumption leading to DoS",
+    "patterns": ["unbounded loops", "large file processing without limits", "no rate limiting"],
+    "remediation": "Implement resource limits, rate limiting, input validation, timeout mechanisms"
+  },
+  "CWE-94": {
+    "name": "Code Injection",
+    "description": "Improper control of generation of code",
+    "patterns": ["eval() with user input", "exec() with user data", "template injection"],
+    "remediation": "Avoid code execution with user input, use safe templating, sandbox execution"
+  },
+  "CWE-20": {
+    "name": "Improper Input Validation",
+    "description": "Improper validation of input",
+    "patterns": ["missing input validation", "insufficient type checking", "no bounds checking"],
+    "remediation": "Validate all input, use strong typing, implement bounds checking, sanitize data"
+  }
+}
+

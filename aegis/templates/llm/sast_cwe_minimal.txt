@@ -1,0 +1,24 @@
+SYSTEM: You are a code security scanner. Output only JSON that conforms to the schema. No commentary.
+
+USER:
+Language: {LANG}
+File: {FILE_PATH}
+Snippet (lines {LINE_START}-{LINE_END}):
+"""
+{SNIPPET}
+"""
+
+Relevant CWEs (short descriptions):
+{CWE_BLOCK}
+
+JSON schema:
+{OUTPUT_SCHEMA}
+
+Task:
+- Detect vulnerabilities in the snippet.
+- If none, return {"findings": []}.
+- If any, emit findings with precise line ranges and a stable fingerprint (e.g., sha1 of normalized (CWE + file + lines + short message)).
+- Keep messages short and actionable.
+
+Return only JSON.
+

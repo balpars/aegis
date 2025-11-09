@@ -1,0 +1,41 @@
+# Model registry configuration
+# This file defines default models and their configurations
+
+providers:
+  ollama:
+    base_url: "http://localhost:11434"
+    default_models:
+      - "qwen2.5-coder:7b"
+      - "codellama:7b"
+  
+  openai:
+    api_base: "https://api.openai.com/v1"
+    default_models:
+      - "gpt-4o"
+      - "gpt-4-turbo"
+  
+  anthropic:
+    api_base: "https://api.anthropic.com/v1"
+    default_models:
+      - "claude-3-opus-20240229"
+      - "claude-3-sonnet-20240229"
+
+consensus:
+  default_strategy: "union"
+  weights:
+    # Example weights (model_id -> weight)
+    # "ollama:qwen2.5-coder:7b": 1.0
+    # "openai:gpt-4o": 1.5
+
+rate_limits:
+  per_provider:
+    ollama: 10  # requests per second
+    openai: 5
+    anthropic: 5
+
+timeouts:
+  default: 300  # seconds
+  ollama: 600
+  openai: 60
+  anthropic: 60
+
