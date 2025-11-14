@@ -7,10 +7,13 @@ aegis is an AI-powered Static Application Security Testing (SAST) tool that uses
 
 [![Demo Video](aegis/static/img/aegis-logo.svg)](https://youtu.be/StXTwdxQyQI)
 
-**Watch the demo video (Ollama): [https://youtu.be/StXTwdxQyQI](https://youtu.be/StXTwdxQyQI)]**
-**Watch the demo video (Cloud AI): [NOT YET RELEASED](NOT YET RELEASED)**
-**Watch the demo video (HuggingFace Models): [NOT YET RELEASED](NOT YET RELEASED)**
-**Watch the demo video (Old-School ML Models): [NOT YET RELEASED](NOT YET RELEASED)**
+**Watch the demo video (Ollama): [https://youtu.be/StXTwdxQyQI](https://youtu.be/StXTwdxQyQI)**
+
+**Watch the demo video (Cloud AI): [NOT YET RELEASED]**
+
+**Watch the demo video (HuggingFace Models): [NOT YET RELEASED]**
+
+**Watch the demo video (Old-School ML Models): [NOT YET RELEASED]**
 
 ## Overview
 
