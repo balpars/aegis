@@ -5,7 +5,7 @@
 
 aegis is an AI-powered Static Application Security Testing (SAST) tool that uses Large Language Models (LLMs) via Ollama to analyze source code for security vulnerabilities. It provides comprehensive vulnerability detection with detailed reports.
 
-[![Demo Video](aegis/static/img/aegis-logo.svg)](https://youtu.be/StXTwdxQyQI)
+[![Demo Video](https://img.youtube.com/vi/StXTwdxQyQI/0.jpg)](https://youtu.be/StXTwdxQyQI)
 
 **Watch the demo video (Ollama): [https://youtu.be/StXTwdxQyQI](https://youtu.be/StXTwdxQyQI)**
 
