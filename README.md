@@ -60,30 +60,6 @@ aegis leverages multiple AI models working in parallel to identify security vuln
 
 5. Access the web interface at `http://localhost:5000`
 
-### Docker Commands
-
-- **Build the image:**
-  ```bash
-  docker build -t aegis .
-  ```
-
-- **Run the container:**
-  ```bash
-  docker run -d -p 5000:5000 \
-    -v $(pwd)/config:/app/config \
-    -v $(pwd)/data:/app/data \
-    aegis
-  ```
-
-- **View logs:**
-  ```bash
-  docker-compose logs -f aegis
-  ```
-
-- **Stop the services:**
-  ```bash
-  docker-compose down
-  ```
 
 ## Usage
 
