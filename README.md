@@ -5,6 +5,13 @@
 
 aegis is an AI-powered Static Application Security Testing (SAST) tool that uses Large Language Models (LLMs) via Ollama to analyze source code for security vulnerabilities. It provides comprehensive vulnerability detection with detailed reports.
 
+[![Demo Video](aegis/static/img/aegis-logo.svg)](https://youtu.be/StXTwdxQyQI)
+
+**Watch the demo video (Ollama): [https://youtu.be/StXTwdxQyQI](https://youtu.be/StXTwdxQyQI)]**
+**Watch the demo video (Cloud AI): [NOT YET RELEASED](NOT YET RELEASED)**
+**Watch the demo video (HuggingFace Models): [NOT YET RELEASED](NOT YET RELEASED)**
+**Watch the demo video (Old-School ML Models): [NOT YET RELEASED](NOT YET RELEASED)**
+
 ## Overview
 
 aegis leverages multiple AI models working in parallel to identify security vulnerabilities in source code. By utilizing consensus algorithms, it combines findings from multiple models to reduce false positives and improve detection accuracy. The tool supports various LLM providers including Ollama (local), OpenAI, Anthropic, Azure, and HuggingFace.
