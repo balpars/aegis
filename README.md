@@ -41,19 +41,13 @@ python -m venv .venv
 pip install -r requirements/requirements.txt
 ```
 
-### 2. Initialize Database
-
-```bash
-python scripts/migrate_to_v2.py
-```
-
-### 3. Run Server
+### 2. Run Server
 
 ```bash
 python app.py
 ```
 
-Open: http://localhost:5000
+The database will auto-initialize on first run. Open: http://localhost:5000
 
 ---
 

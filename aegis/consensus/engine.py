@@ -136,6 +136,35 @@ class ConsensusEngine:
         # Process each file with judge
         consensus_findings = []
 
+        # Support legacy judge adapters with .predict(), or ModelRecord (new registry).
+        def _run_judge_predict(prompt: str, file_path: str, candidate_data: List[Dict[str, Any]]):
+            from aegis.data_models import ModelRequest
+
+            judge_request = ModelRequest(
+                code_context=prompt,
+                file_path=file_path,
+                language=request_params.get("language", "unknown"),
+                prompt_template_id="judge_consensus",
+            )
+            return judge_model.predict(judge_request)
+
+        def _run_judge_runtime(file_path: str, candidate_data: List[Dict[str, Any]]):
+            import asyncio
+            import json
+            from aegis.models.runtime_manager import DEFAULT_RUNTIME_MANAGER
+            from aegis.models.schema import ModelRole
+            from aegis.models.engine import _candidate_to_finding
+
+            runtime = DEFAULT_RUNTIME_MANAGER.get_runtime(judge_model)
+            context = {
+                "file_path": file_path,
+                "findings_json": json.dumps(candidate_data, indent=2),
+            }
+            result = asyncio.run(runtime.run("", context, role=ModelRole.JUDGE))
+            return [_candidate_to_finding(c) for c in result.findings]
+
+        has_predict = hasattr(judge_model, "predict")
+
         for file_path, findings in findings_by_file.items():
             # Convert findings to dict for judge
             candidate_data = [f.to_dict() for f in findings]
@@ -150,23 +179,16 @@ class ConsensusEngine:
                 language=language,
                 repo_name=repo_name,
             )
-
-            # Create judge request
-            from aegis.data_models import ModelRequest
-
-            judge_request = ModelRequest(
-                code_context=prompt,
-                file_path=file_path,
-                language=language,
-                prompt_template_id="judge_consensus",
-            )
-
-            # Run judge model
-            judge_response = judge_model.predict(judge_request)
-
-            if not judge_response.error:
-                consensus_findings.extend(judge_response.findings)
-            else:
+            try:
+                if has_predict:
+                    judge_response = _run_judge_predict(prompt, file_path, candidate_data)
+                    if not judge_response.error:
+                        consensus_findings.extend(judge_response.findings)
+                    else:
+                        consensus_findings.extend(self._deduplicate_findings(findings))
+                else:
+                    consensus_findings.extend(_run_judge_runtime(file_path, candidate_data))
+            except Exception:
                 # Fallback to union if judge fails
                 consensus_findings.extend(self._deduplicate_findings(findings))
 

@@ -166,6 +166,17 @@ def create_provider(model: ModelRecord) -> Any:
                     hf_kwargs.pop("load_in_8bit", None)
 
             device = runtime.device if "device_map" not in hf_kwargs else None
+            generation_kwargs = settings.get("generation_kwargs") or {}
+            if settings.get("task_type", "text-generation") == "text-generation":
+                force_json = settings.get("force_json_output")
+                if force_json is None:
+                    force_json = model.parser_id == "json_schema"
+                if force_json:
+                    generation_kwargs = dict(generation_kwargs)
+                    generation_kwargs.setdefault("do_sample", False)
+                    generation_kwargs.setdefault("temperature", 0.0)
+                    generation_kwargs.setdefault("min_new_tokens", 64)
+                    generation_kwargs.setdefault("max_new_tokens", 512)
 
             return HFLocalProvider(
                 model_id=model.model_name,
@@ -173,7 +184,7 @@ def create_provider(model: ModelRecord) -> Any:
                 adapter_id=settings.get("adapter_id"),
                 base_model_id=settings.get("base_model_id"),
                 device=device,
-                generation_kwargs=settings.get("generation_kwargs"),
+                generation_kwargs=generation_kwargs,
                 max_workers=runtime.max_concurrency,
                 **hf_kwargs,
             )
