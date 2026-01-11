@@ -43,18 +43,22 @@ Your response must match this exact structure:
 
 Return ONLY the JSON. Do not include explanations, markdown code blocks, or any text outside the JSON structure."""
 
-    DEFAULT_PROMPT_TEMPLATE = """Analyze the following code for security vulnerabilities.
-Return ONLY valid JSON matching exactly this structure:
+    DEFAULT_PROMPT_TEMPLATE = """You are a code security scanner.
+Return ONLY valid JSON. No markdown, no prose.
+If no issues are found, return {{\"findings\": []}}.
+The output must start with '{{' and end with '}}'.
+
+Schema:
 {{
   "findings": [
     {{
       "file_path": "{file_path}",
-      "line_start": <number>,
-      "line_end": <number>,
+      "line_start": 1,
+      "line_end": 1,
       "snippet": "<code snippet>",
       "cwe": "<CWE-id or null>",
       "severity": "critical|high|medium|low|info",
-      "confidence": <0.0-1.0>,
+      "confidence": 0.0,
       "title": "<short title>",
       "category": "<vulnerability type/category>",
       "description": "<detailed explanation>",
@@ -68,7 +72,7 @@ Code to analyze:
 {code}
 ```
 
-Return only the JSON payload. No prose."""
+Return only the JSON payload."""
 
     def __init__(self, provider: Any, parser: Any, config: Optional[Dict[str, Any]] = None):
         """Initialize deep scan runner."""
@@ -82,8 +86,15 @@ Return only the JSON payload. No prose."""
         context = context or {}
         code = context.get("code", prompt)
         file_path = context.get("file_path", "unknown")
+        template = self.prompt_template
+        if "{code}" not in template:
+            template = (
+                template.rstrip()
+                + "\n\nCode to analyze:\n```\n{code}\n```\n"
+            )
+
         formatted_prompt = self._build_prompt(
-            self.prompt_template,
+            template,
             code=code,
             file_path=file_path
         )

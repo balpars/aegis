@@ -38,7 +38,7 @@ python -m venv .venv
 .venv\Scripts\activate  # Windows
 # source .venv/bin/activate  # Linux/Mac
 
-pip install -r requirements.txt
+pip install -r requirements/requirements.txt
 ```
 
 ### 2. Initialize Database
@@ -190,11 +190,11 @@ data/aegis.db         # Registry database
 
 ### Requirements
 
-- **Minimal** (cloud only): `pip install -r requirements-minimal.txt` (~100MB)
-- **Standard** (CPU): `pip install -r requirements.txt` (~3.5GB)
-- **GPU** (CUDA 11.8): `pip install -r requirements-gpu.txt` (~5GB)
+- **Minimal** (cloud only): `pip install -r requirements/requirements-minimal.txt` (~100MB)
+- **Standard** (CPU): `pip install -r requirements/requirements.txt` (~3.5GB)
+- **GPU** (CUDA 11.8): `pip install -r requirements/requirements-gpu.txt` (~5GB)
 
-See [REQUIREMENTS.md](REQUIREMENTS.md) for details.
+See [requirements/REQUIREMENTS.md](requirements/REQUIREMENTS.md) for details.
 
 ---
 

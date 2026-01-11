@@ -73,6 +73,8 @@ logs/
 htmlcov/
 test_*.py
 test_project/
+tests/
+conftest.py
 
 # Scripts (development/migration only)
 scripts/

@@ -132,7 +132,7 @@ async function loadOllamaModels(forceRefresh) {
               <div class="d-flex justify-content-between align-items-center">
                 <div>
                   <div class="fw-bold font-monospace small text-primary">${name}</div>
-                  <div class="text-secondary extra-small font-monospace">${size}</div>
+                  ${(model.size || 0) > 0 ? `<div class="text-secondary extra-small font-monospace">${size}</div>` : ''}
                 </div>
                 <div>
                    ${isReg
@@ -160,7 +160,7 @@ async function loadHuggingFaceModels() {
     const presets = presetsRes.presets || [];
 
     if (presets.length === 0) {
-      container.innerHTML = `<div class="text-center py-5 text-secondary font-monospace">NO_PRESETS_AVAILABLE</div>`;
+      container.innerHTML = `< div class="text-center py-5 text-secondary font-monospace" > NO_PRESETS_AVAILABLE</div > `;
       return;
     }
 
@@ -173,32 +173,32 @@ async function loadHuggingFaceModels() {
       const presetId = preset.model_id.split('/').pop().replace(/[^a-z0-9]/gi, '_');
 
       html += `
-            <div class="list-group-item bg-panel border-subtle text-light p-4">
-                <div class="d-flex justify-content-between align-items-start gap-3">
-                    <div class="flex-grow-1">
-                        <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
-                             <span class="fw-bold text-white fs-5" style="letter-spacing: 0.05em;">${preset.name}</span>
-                             ${(preset.recommended_roles || []).map(r => `<span class="badge bg-primary bg-opacity-25 text-primary-emphasis border border-primary border-opacity-25 rounded-0 small font-monospace">${r}</span>`).join(' ')}
-                        </div>
-                        <div class="text-light opacity-75 mb-2" style="font-size: 0.95rem; line-height: 1.5;">${preset.description}</div>
-                        <div class="font-monospace small text-aegis-gold opacity-75 text-break bg-black bg-opacity-25 p-2 rounded-1 border border-subtle d-inline-block">
-                            <i class="bi bi-box-seam me-2"></i>${preset.model_id}
-                        </div>
-                    </div>
-                    <div class="flex-shrink-0 ms-3">
-                        ${isReg
+        < div class="list-group-item bg-panel border-subtle text-light p-4" >
+          <div class="d-flex justify-content-between align-items-start gap-3">
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                <span class="fw-bold text-white fs-5" style="letter-spacing: 0.05em;">${preset.name}</span>
+                ${(preset.recommended_roles || []).map(r => `<span class="badge bg-primary bg-opacity-25 text-primary-emphasis border border-primary border-opacity-25 rounded-0 small font-monospace">${r}</span>`).join(' ')}
+              </div>
+              <div class="text-light opacity-75 mb-2" style="font-size: 0.95rem; line-height: 1.5;">${preset.description}</div>
+              <div class="font-monospace small text-aegis-gold opacity-75 text-break bg-black bg-opacity-25 p-2 rounded-1 border border-subtle d-inline-block">
+                <i class="bi bi-box-seam me-2"></i>${preset.model_id}
+              </div>
+            </div>
+            <div class="flex-shrink-0 ms-3">
+              ${isReg
           ? '<span class="badge bg-success text-white border border-success rounded-0 p-2 font-monospace"><i class="bi bi-check2-circle me-2"></i>REGISTERED</span>'
           : `<button class="btn btn-warning text-dark fw-bold rounded-0 font-monospace px-4 py-2 shadow-sm" onclick="openHFPresetModal('${presetId}')"><i class="bi bi-download me-2"></i>INSTALL</button>`
         }
-                    </div>
-                </div>
-            </div>`;
+            </div>
+          </div>
+            </div > `;
     });
     html += '</div>';
     container.innerHTML = html;
   } catch (e) {
     console.error("HF Error", e);
-    document.getElementById("hfModelsList").innerHTML = `<div class="alert alert-danger font-monospace small">CONNECTION_ERROR: ${e.message}</div>`;
+    document.getElementById("hfModelsList").innerHTML = `< div class="alert alert-danger font-monospace small" > CONNECTION_ERROR: ${e.message}</div > `;
   }
 }
 
@@ -306,7 +306,7 @@ async function runTestModel() {
     }
     resultBox.textContent = JSON.stringify(data.result, null, 2);
   } catch (e) {
-    resultBox.textContent = `Error: ${e.message}`;
+    resultBox.textContent = `Error: ${e.message} `;
   }
 }
 
@@ -315,7 +315,7 @@ function parseJsonField(value, fieldName) {
   try {
     return JSON.parse(value);
   } catch (e) {
-    throw new Error(`Invalid JSON in ${fieldName}`);
+    throw new Error(`Invalid JSON in ${fieldName} `);
   }
 }
 
@@ -418,7 +418,7 @@ async function saveRegisteredModel() {
   };
 
   try {
-    const response = await fetch(`/api/models/registry/${encodeURIComponent(modelId)}`, {
+    const response = await fetch(`/ api / models / registry / ${encodeURIComponent(modelId)} `, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -431,14 +431,14 @@ async function saveRegisteredModel() {
     if (modal) modal.hide();
     loadRegisteredModels();
   } catch (e) {
-    alert(`Failed to update model: ${e.message}`);
+    alert(`Failed to update model: ${e.message} `);
   }
 }
 
 async function registerOllamaQuick(name) {
   try {
     const payload = {
-      model_id: `ollama:${name}`,
+      model_id: `ollama:${name} `,
       provider_id: 'ollama',
       model_type: 'ollama_local',
       model_name: name,
@@ -458,7 +458,7 @@ async function registerOllamaQuick(name) {
         const json = JSON.parse(text);
         if (json.error) errMsg = json.error;
       } catch (e) { }
-      throw new Error(errMsg || `HTTP ${response.status}`);
+      throw new Error(errMsg || `HTTP ${response.status} `);
     }
 
     alert("Model Registered Successfully");
@@ -471,7 +471,7 @@ async function registerOllamaQuick(name) {
 
 async function deleteModel(id) {
   if (!confirm("CONFIRM_DELETION?")) return;
-  await fetch(`/api/models/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  await fetch(`/ api / models / ${encodeURIComponent(id)} `, { method: 'DELETE' });
   loadRegisteredModels();
   loadOllamaModels(false);
 }

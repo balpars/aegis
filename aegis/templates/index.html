@@ -252,11 +252,19 @@
 
   [dropArea, browseBtn].forEach(el => el.addEventListener('click', () => fileInput.click()));
 
+  function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
       fileName.textContent = file.name;
-      frameSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+      frameSize.textContent = formatBytes(file.size);
       dropArea.classList.add('d-none');
       fileInfo.classList.remove('d-none');
       refreshModelPicker();
