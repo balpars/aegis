@@ -611,18 +611,29 @@
       const data = JSON.parse(e.data);
       const modelId = data.model_id;
       const modelName = data.model_name;
+      const modelType = data.model_type || 'unknown';
+      const device = data.device || 'unknown';
+      const vramUsage = data.vram_mb || 0;
+      const loadTime = data.load_time_ms || 0;
 
       models[modelId] = {
         id: modelId,
         name: modelName,
+        type: modelType,
+        device: device,
+        vramUsage: vramUsage,
+        loadTime: loadTime,
         status: 'running',
         calls: 0,
         latencies: [],
-        findingsCount: 0
+        findingsCount: 0,
+        tokens: { input: 0, output: 0 },
+        quantization: data.quantization || null,
+        precision: data.precision || null
       };
 
       updateModelsUI();
-      logMessage(`Model started: ${modelName}`, 'info');
+      logMessage(`Model started: ${modelName} on ${device} (${vramUsage}MB VRAM, loaded in ${loadTime}ms)`, 'info');
     }
 
     function handleModelCompleted(e) {
@@ -630,16 +641,22 @@
       const modelId = data.model_id;
       const findingsCount = data.findings_count || 0;
       const latency = data.latency_ms || 0;
+      const inputTokens = data.input_tokens || 0;
+      const outputTokens = data.output_tokens || 0;
+      const tokensPerSec = data.tokens_per_sec || 0;
 
       if (models[modelId]) {
         models[modelId].status = 'completed';
         models[modelId].calls++;
         models[modelId].latencies.push(latency);
         models[modelId].findingsCount += findingsCount;
+        models[modelId].tokens.input += inputTokens;
+        models[modelId].tokens.output += outputTokens;
+        models[modelId].tokensPerSec = tokensPerSec;
       }
 
       updateModelsUI();
-      logMessage(`Model completed: ${modelId} (${latency}ms, ${findingsCount} findings)`, 'success');
+      logMessage(`Model completed: ${modelId} (${latency}ms, ${findingsCount} findings, ${inputTokens+outputTokens} tokens, ${tokensPerSec.toFixed(1)} tok/s)`, 'success');
     }
 
     function handleProgress(e) {
@@ -853,13 +870,42 @@
           ? Math.round(model.latencies.reduce((a, b) => a + b, 0) / model.latencies.length)
           : 0;
 
+        const totalTokens = model.tokens.input + model.tokens.output;
+        const isHF = model.type && model.type.includes('hf');
+        const isCloud = model.type && model.type.includes('cloud');
+
+        let deviceBadge = '';
+        if (model.device && model.device !== 'unknown') {
+          const deviceColor = model.device.includes('cuda') ? 'success' :
+                             model.device.includes('mps') ? 'info' :
+                             'secondary';
+          deviceBadge = `<span class="badge bg-${deviceColor} bg-opacity-10 text-${deviceColor} border border-${deviceColor} border-opacity-25" style="font-size: 0.7rem;">${model.device.toUpperCase()}</span>`;
+        }
+
+        let quantBadge = '';
+        if (model.quantization) {
+          quantBadge = `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25" style="font-size: 0.7rem;">${model.quantization}</span>`;
+        }
+
+        let precisionBadge = '';
+        if (model.precision) {
+          precisionBadge = `<span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25" style="font-size: 0.7rem;">${model.precision}</span>`;
+        }
+
         return `
           <div class="model-panel">
             <div class="model-header">
-              <span class="model-name">${model.name}</span>
+              <div>
+                <span class="model-name">${model.name}</span>
+                <div class="mt-1" style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                  ${deviceBadge}
+                  ${quantBadge}
+                  ${precisionBadge}
+                </div>
+              </div>
               <span class="model-status ${model.status}">${model.status}</span>
             </div>
-            <div class="model-stats">
+            <div class="model-stats" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));">
               <div class="model-stat">
                 <span class="model-stat-label">Calls</span>
                 <span class="model-stat-value">${model.calls}</span>
@@ -872,7 +918,39 @@
                 <span class="model-stat-label">Findings</span>
                 <span class="model-stat-value">${model.findingsCount}</span>
               </div>
+              ${isHF || isCloud ? `
+              <div class="model-stat">
+                <span class="model-stat-label">Total Tokens</span>
+                <span class="model-stat-value">${totalTokens.toLocaleString()}</span>
+              </div>
+              ` : ''}
+              ${model.tokensPerSec ? `
+              <div class="model-stat">
+                <span class="model-stat-label">Speed</span>
+                <span class="model-stat-value">${model.tokensPerSec.toFixed(1)} tok/s</span>
+              </div>
+              ` : ''}
+              ${model.vramUsage > 0 ? `
+              <div class="model-stat">
+                <span class="model-stat-label">VRAM</span>
+                <span class="model-stat-value">${model.vramUsage}MB</span>
+              </div>
+              ` : ''}
+              ${model.loadTime > 0 ? `
+              <div class="model-stat">
+                <span class="model-stat-label">Load Time</span>
+                <span class="model-stat-value">${model.loadTime}ms</span>
+              </div>
+              ` : ''}
             </div>
+            ${isHF || isCloud ? `
+            <div class="mt-2 pt-2 border-top border-subtle" style="font-size: 0.7rem; color: var(--text-secondary);">
+              <div class="d-flex justify-content-between">
+                <span>Input: ${model.tokens.input.toLocaleString()} tokens</span>
+                <span>Output: ${model.tokens.output.toLocaleString()} tokens</span>
+              </div>
+            </div>
+            ` : ''}
           </div>
         `;
       }).join('');

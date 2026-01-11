@@ -352,20 +352,49 @@ class EventEmitter:
             "error": error,
         })
 
-    def model_started(self, model_id: str, model_name: str):
-        """Emit model started event."""
-        self.emit(EventType.MODEL_STARTED, {
+    def model_started(self, model_id: str, model_name: str, model_type: Optional[str] = None,
+                      device: Optional[str] = None, vram_mb: int = 0, load_time_ms: int = 0,
+                      quantization: Optional[str] = None, precision: Optional[str] = None):
+        """Emit model started event with detailed telemetry."""
+        data = {
             "model_id": model_id,
             "model_name": model_name,
-        })
+        }
 
-    def model_completed(self, model_id: str, findings_count: int, latency_ms: int):
-        """Emit model completed event."""
-        self.emit(EventType.MODEL_COMPLETED, {
+        # Add optional telemetry data
+        if model_type:
+            data["model_type"] = model_type
+        if device:
+            data["device"] = device
+        if vram_mb > 0:
+            data["vram_mb"] = vram_mb
+        if load_time_ms > 0:
+            data["load_time_ms"] = load_time_ms
+        if quantization:
+            data["quantization"] = quantization
+        if precision:
+            data["precision"] = precision
+
+        self.emit(EventType.MODEL_STARTED, data)
+
+    def model_completed(self, model_id: str, findings_count: int, latency_ms: int,
+                       input_tokens: int = 0, output_tokens: int = 0, tokens_per_sec: float = 0.0):
+        """Emit model completed event with token metrics."""
+        data = {
             "model_id": model_id,
             "findings_count": findings_count,
             "latency_ms": latency_ms,
-        })
+        }
+
+        # Add token metrics if available
+        if input_tokens > 0:
+            data["input_tokens"] = input_tokens
+        if output_tokens > 0:
+            data["output_tokens"] = output_tokens
+        if tokens_per_sec > 0:
+            data["tokens_per_sec"] = tokens_per_sec
+
+        self.emit(EventType.MODEL_COMPLETED, data)
 
     def model_failed(self, model_id: str, error: str):
         """Emit model failed event."""
