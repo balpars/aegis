@@ -97,14 +97,37 @@ Editable settings:
 
 ### Cloud Models (API keys + registration)
 
-Cloud models are registered just like any other model and are managed from the Models page.
-Store API keys in the model settings (`settings.api_key`) or set environment variables:
+Aegis supports cloud LLM providers for vulnerability scanning. Cloud models are registered like any other model and managed from the Models page.
 
-- `OPENAI_API_KEY`
-- `ANTHROPIC_API_KEY`
-- `GOOGLE_API_KEY`
+#### Supported Cloud Providers
 
-Example: OpenAI cloud model
+| Provider | Model Examples | Environment Variable |
+|----------|----------------|---------------------|
+| **OpenAI** | GPT-4, GPT-4-Turbo, GPT-3.5-Turbo | `OPENAI_API_KEY` |
+| **Anthropic** | Claude 3 Opus, Sonnet, Haiku | `ANTHROPIC_API_KEY` |
+| **Google** | Gemini Pro, Gemini 1.5 Pro/Flash | `GOOGLE_API_KEY` |
+
+#### Setup
+
+**Option 1: Environment Variables** (Recommended)
+
+```bash
+# Windows
+set OPENAI_API_KEY=sk-...
+set ANTHROPIC_API_KEY=sk-ant-...
+set GOOGLE_API_KEY=...
+
+# Linux/Mac
+export OPENAI_API_KEY=sk-...
+export ANTHROPIC_API_KEY=sk-ant-...
+export GOOGLE_API_KEY=...
+```
+
+**Option 2: In Model Settings**
+
+Store API keys directly in model settings when registering (less secure, not recommended for production).
+
+#### Example: Register OpenAI GPT-4
 
 ```bash
 curl -X POST http://localhost:5000/api/models/registry \
@@ -117,7 +140,44 @@ curl -X POST http://localhost:5000/api/models/registry \
     "roles": ["deep_scan"],
     "parser_id": "json_schema",
     "settings": {
-      "api_key": "YOUR_KEY",
+      "max_tokens": 2048,
+      "temperature": 0.1
+    }
+  }'
+```
+
+#### Example: Register Anthropic Claude
+
+```bash
+curl -X POST http://localhost:5000/api/models/registry \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_type": "anthropic_cloud",
+    "provider_id": "anthropic",
+    "model_name": "claude-3-5-sonnet-20241022",
+    "display_name": "Claude 3.5 Sonnet",
+    "roles": ["deep_scan"],
+    "parser_id": "json_schema",
+    "settings": {
+      "max_tokens": 4096,
+      "temperature": 0.1
+    }
+  }'
+```
+
+#### Example: Register Google Gemini
+
+```bash
+curl -X POST http://localhost:5000/api/models/registry \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_type": "google_cloud",
+    "provider_id": "google",
+    "model_name": "gemini-1.5-flash",
+    "display_name": "Gemini 1.5 Flash",
+    "roles": ["deep_scan"],
+    "parser_id": "json_schema",
+    "settings": {
       "max_tokens": 2048,
       "temperature": 0.1
     }
