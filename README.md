@@ -1,7 +1,7 @@
 <div align="center">
   <img src="aegis/static/img/aegis-logo.svg" alt="aegis logo" width="200"/>
   <h1>Aegis - AI-Powered SAST Framework</h1>
-  <p>Use LLMs to find security vulnerabilities in your code</p>
+  <p>Multi-model security scanning with LLMs - Local & Cloud</p>
 </div>
 
 ---
@@ -10,28 +10,39 @@
 
 [![Demo Video (Ollama)](https://img.youtube.com/vi/StXTwdxQyQI/0.jpg)](https://youtu.be/StXTwdxQyQI)
 
-- **Ollama**: https://youtu.be/StXTwdxQyQI
-- **Cloud AI**: Coming soon
-- **HuggingFace Models**: Coming soon
-- **ML Models**: Coming soon
+- **Ollama (Local)**: https://youtu.be/StXTwdxQyQI
+- **Cloud AI & HuggingFace**: Coming soon
 
 ---
 
 ## Features
 
+### Core Capabilities
 - **Multi-Provider Support**: Ollama, HuggingFace, OpenAI, Anthropic, Google Gemini
-- **Registry-Driven**: All models registered in SQLite - no hidden magic
+- **Zero Configuration**: Auto-initializes database on first run
+- **Real-Time Scanning**: Server-sent events for live progress updates
+- **Background Processing**: Non-blocking scans with persistent queue
+- **Model Registry**: SQLite-based persistent model storage
+
+### Advanced Features
+- **Consensus Strategies**: Union, majority, weighted, judge-based merging
 - **Role-Based Scanning**: Triage, deep scan, judge, explain
-- **Runtime Control**: Choose CPU/GPU, quantization, concurrency per model
-- **Consensus Engine**: Combine results from multiple models
-- **Web UI + API**: Manage models, run scans, view history
-- **Export**: SARIF and CSV formats
+- **Runtime Control**: CPU/GPU selection, quantization (4-bit/8-bit), concurrency limits
+- **Smart Parsing**: JSON schema validation with fallback handling
+- **Scan History**: Persistent database with full result tracking
+- **Export Formats**: SARIF and CSV for CI/CD integration
+
+### Developer Experience
+- **Web UI + REST API**: Full-featured interface and programmatic access
+- **HuggingFace Integration**: Local model execution with auto-download
+- **Cloud LLM Support**: Optimized prompts for GPT, Claude, Gemini
+- **Flexible Configuration**: YAML presets, API registration, or Python SDK
 
 ---
 
 ## Quick Start
 
-### 1. Install
+### 1. Install Dependencies
 
 ```bash
 python -m venv .venv
@@ -41,13 +52,22 @@ python -m venv .venv
 pip install -r requirements/requirements.txt
 ```
 
-### 2. Run Server
+**Installation Options:**
+- **Minimal** (cloud only, ~100MB): `pip install -r requirements/requirements-minimal.txt`
+- **Standard** (CPU, ~3.5GB): `pip install -r requirements/requirements.txt`
+- **GPU** (CUDA 11.8, ~5GB): `pip install -r requirements/requirements-gpu.txt`
+
+See [requirements/REQUIREMENTS.md](requirements/REQUIREMENTS.md) for details.
+
+### 2. Start Aegis
 
 ```bash
 python app.py
 ```
 
-The database will auto-initialize on first run. Open: http://localhost:5000
+Database auto-initializes on first run. Open: **http://localhost:5000**
+
+That's it! No manual setup required.
 
 ---
 
@@ -55,32 +75,36 @@ The database will auto-initialize on first run. Open: http://localhost:5000
 
 ### Ollama (Local)
 
+**Setup:**
 1. Install Ollama: https://ollama.ai
-2. Pull a model: `ollama pull llama3`
-3. In Aegis UI → **Models** → **DISCOVER_OLLAMA** → Register
-4. Run a scan!
+2. Pull a model: `ollama pull llama3.2`
+3. Aegis UI → **Models** → **DISCOVER OLLAMA**
+4. Click **Register** on detected models
+5. Run your first scan!
+
+**Recommended Models:**
+- `llama3.2:latest` - Fast, general-purpose
+- `qwen2.5-coder:7b` - Code-specialized
+- `codellama:7b` - Security-focused
 
 ### HuggingFace (Local)
 
 **Quick Start (UI):**
-1. In Aegis UI → **Models** → **HUGGING_FACE**
+1. Aegis UI → **Models** → **HUGGING FACE**
 2. Click **Register** on CodeBERT or CodeAstra
-3. Models download automatically on first use
+3. Models download automatically on first scan
 
-**Adding Custom HuggingFace Models:**
+**Add Custom Models:**
 
-You can add any HuggingFace model for security scanning. Here's how:
-
-#### Via API (Recommended)
-
+Via API:
 ```bash
 curl -X POST http://localhost:5000/api/models/registry \
   -H "Content-Type: application/json" \
   -d '{
     "model_type": "hf_local",
     "provider_id": "huggingface",
-    "model_name": "your-org/your-model-name",
-    "display_name": "Your Model Display Name",
+    "model_name": "deepseek-ai/deepseek-coder-6.7b-base",
+    "display_name": "DeepSeek Coder 6.7B",
     "roles": ["deep_scan"],
     "parser_id": "json_schema",
     "settings": {
@@ -93,28 +117,22 @@ curl -X POST http://localhost:5000/api/models/registry \
       },
       "generation_kwargs": {
         "max_new_tokens": 512,
-        "min_new_tokens": 50,
         "temperature": 0.2,
-        "top_p": 0.9,
-        "do_sample": true
+        "top_p": 0.9
       }
     }
   }'
 ```
 
-#### Via Code (config/models.yaml)
-
-Add to your `config/models.yaml`:
-
+Via YAML (`config/models.yaml`):
 ```yaml
 models:
-  - model_id: "hf:your_model"
+  - model_id: "hf:deepseek_coder"
     model_type: "hf_local"
     provider_id: "huggingface"
-    model_name: "your-org/your-model-name"
-    display_name: "Your Model Display Name"
-    roles:
-      - deep_scan
+    model_name: "deepseek-ai/deepseek-coder-6.7b-base"
+    display_name: "DeepSeek Coder 6.7B"
+    roles: [deep_scan]
     parser_id: "json_schema"
     settings:
       task_type: "text-generation"
@@ -127,61 +145,25 @@ models:
         temperature: 0.2
 ```
 
-Then run: `python scripts/migrate_to_v2.py`
+**Recommended Models:**
 
-#### Via Python Code
+| Model | HuggingFace ID | Best For | Memory |
+|-------|----------------|----------|--------|
+| DeepSeek Coder | `deepseek-ai/deepseek-coder-6.7b-base` | Vulnerability detection | ~2GB (4-bit) |
+| CodeLlama | `codellama/CodeLlama-7b-hf` | General security | ~2GB (4-bit) |
+| StarCoder | `bigcode/starcoder` | Deep analysis | ~4GB (4-bit) |
+| CodeBERT | `microsoft/codebert-base` | Fast triage | ~500MB |
+| CodeT5 | `Salesforce/codet5-base` | Code understanding | ~900MB |
 
-```python
-from aegis.models.registry import ModelRegistryV2
-from aegis.models.schema import ModelType, ModelRole
+**Key Settings:**
+- **device_preference**: `["cuda", "cpu"]` - GPU first, fallback to CPU
+- **dtype**: `"bf16"` (modern GPUs), `"fp16"` (older GPUs), `"fp32"` (CPU)
+- **quantization**: `"4bit"` (~2GB for 7B), `"8bit"` (~4GB), `null` (full)
+- **temperature**: `0.1-0.2` for deterministic security analysis
 
-registry = ModelRegistryV2()
-registry.register_model(
-    model_id="hf:your_model",
-    model_type=ModelType.HF_LOCAL,
-    provider_id="huggingface",
-    model_name="your-org/your-model-name",
-    display_name="Your Model Display Name",
-    roles=[ModelRole.DEEP_SCAN],
-    parser_id="json_schema",
-    settings={
-        "task_type": "text-generation",
-        "runtime": {
-            "device_preference": ["cuda", "cpu"],
-            "dtype": "bf16",
-            "quantization": "4bit",
-        },
-        "generation_kwargs": {
-            "max_new_tokens": 512,
-            "temperature": 0.2,
-        }
-    }
-)
-```
+### Cloud LLMs (OpenAI, Anthropic, Google)
 
-#### Popular Models for Security Scanning
-
-| Model | HuggingFace ID | Best For |
-|-------|----------------|----------|
-| CodeBERT | `microsoft/codebert-base` | Triage (fast classification) |
-| CodeT5 | `Salesforce/codet5-base` | Code understanding |
-| StarCoder | `bigcode/starcoder` | Deep analysis |
-| CodeLlama | `codellama/CodeLlama-7b-hf` | General security |
-| DeepSeek Coder | `deepseek-ai/deepseek-coder-6.7b-base` | Vulnerability detection |
-
-#### Key Settings Explained
-
-- **device_preference**: `["cuda", "cpu"]` - Try GPU first, fallback to CPU
-- **dtype**: `"bf16"`, `"fp16"`, `"fp32"` - Model precision (bf16 recommended for modern GPUs)
-- **quantization**: `"4bit"`, `"8bit"`, `null` - Reduce memory usage (4bit uses ~2GB for 7B model)
-- **max_new_tokens**: Maximum output length
-- **temperature**: 0.0-1.0 (lower = more deterministic, 0.1-0.2 recommended for security)
-- **task_type**: `"text-generation"` or `"text-classification"` (depends on model)
-
-### Cloud LLMs
-
-Set API key as environment variable:
-
+**Setup API Keys:**
 ```bash
 # Windows
 set OPENAI_API_KEY=sk-...
@@ -190,11 +172,13 @@ set GOOGLE_API_KEY=...
 
 # Linux/Mac
 export OPENAI_API_KEY=sk-...
+export ANTHROPIC_API_KEY=sk-ant-...
+export GOOGLE_API_KEY=...
 ```
 
-Register via API:
-
+**Register via API:**
 ```bash
+# OpenAI GPT-4o mini
 curl -X POST http://localhost:5000/api/models/registry \
   -H "Content-Type: application/json" \
   -d '{
@@ -209,71 +193,219 @@ curl -X POST http://localhost:5000/api/models/registry \
       "temperature": 0.1
     }
   }'
+
+# Anthropic Claude 3.5 Sonnet
+curl -X POST http://localhost:5000/api/models/registry \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_type": "anthropic_cloud",
+    "provider_id": "anthropic",
+    "model_name": "claude-3-5-sonnet-20241022",
+    "display_name": "Claude 3.5 Sonnet",
+    "roles": ["deep_scan", "judge"],
+    "parser_id": "json_schema",
+    "settings": {
+      "max_tokens": 4096,
+      "temperature": 0.1
+    }
+  }'
+
+# Google Gemini 1.5 Flash
+curl -X POST http://localhost:5000/api/models/registry \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_type": "google_cloud",
+    "provider_id": "google",
+    "model_name": "gemini-1.5-flash",
+    "display_name": "Gemini 1.5 Flash",
+    "roles": ["deep_scan"],
+    "parser_id": "json_schema",
+    "settings": {
+      "max_tokens": 2048,
+      "temperature": 0.1
+    }
+  }'
 ```
 
-**Supported Cloud Providers:**
-- OpenAI (GPT-4, GPT-3.5-Turbo)
-- Anthropic (Claude 3 Opus, Sonnet, Haiku)
-- Google (Gemini Pro, Gemini 1.5)
+**Supported Providers:**
+- **OpenAI**: GPT-4, GPT-4o, GPT-4o-mini, GPT-3.5-Turbo
+- **Anthropic**: Claude 3.5 Opus, Sonnet, Haiku
+- **Google**: Gemini 1.5 Pro, Flash, Gemini Pro
+
+**Cloud Features:**
+- Optimized system prompts for JSON compliance
+- Auto-retry with exponential backoff
+- Rate limiting protection
+- Async execution with event loop isolation
 
 ---
 
 ## Running Scans
 
-### Via UI
+### Web UI
 
-1. Go to **Home** → Upload files or paste code
-2. Select registered models
-3. Click **Start Scan**
-4. View results in real-time
+1. Go to **Home** → Upload ZIP or paste code
+2. Select models to use (multi-select supported)
+3. Choose **Consensus Strategy**:
+   - **Union**: All findings from all models
+   - **Majority**: Only findings found by 2+ models
+   - **Weighted**: Score-based filtering by model confidence
+   - **Judge**: Use a judge model to evaluate and merge
+4. Click **Start Scan**
+5. Watch real-time progress (SSE streaming)
+6. View results, export SARIF/CSV
 
-### Via API
+### API
 
+**Upload files:**
 ```bash
 curl -X POST http://localhost:5000/api/scans/upload \
-  -F "files=@vulnerable.py" \
-  -F "model_ids=ollama:llama3"
+  -F "files=@app.py" \
+  -F "files=@utils.py" \
+  -F "model_ids=ollama:llama3.2" \
+  -F "model_ids=hf:deepseek_coder" \
+  -F "consensus_strategy=union"
 ```
+
+**Submit inline code:**
+```bash
+curl -X POST http://localhost:5000/api/scans/submit \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "eval(user_input)",
+    "language": "python",
+    "model_ids": ["openai:gpt-4o-mini"],
+    "consensus_strategy": "union"
+  }'
+```
+
+**Get scan status:**
+```bash
+curl http://localhost:5000/api/scans/{scan_id}/status
+```
+
+**Download results:**
+```bash
+# SARIF
+curl http://localhost:5000/api/scans/{scan_id}/export/sarif -o results.sarif
+
+# CSV
+curl http://localhost:5000/api/scans/{scan_id}/export/csv -o results.csv
+```
+
+---
+
+## Consensus Strategies
+
+Aegis can combine results from multiple models using different strategies:
+
+### Union (Default)
+Combines all findings from all models. Best for maximum coverage.
+
+### Majority
+Only includes findings detected by 2 or more models. Reduces false positives.
+
+### Weighted
+Filters findings based on confidence scores. Configurable threshold.
+
+### Judge
+Uses a dedicated "judge" model to evaluate and merge findings from other models.
+
+**Example with Judge:**
+```bash
+curl -X POST http://localhost:5000/api/scans/upload \
+  -F "files=@app.py" \
+  -F "model_ids=ollama:llama3.2" \
+  -F "model_ids=hf:deepseek_coder" \
+  -F "consensus_strategy=judge" \
+  -F "judge_model_id=anthropic:claude-3-5-sonnet-20241022"
+```
+
+The judge model receives all findings and decides which are valid, merges duplicates, and assigns final severity.
 
 ---
 
 ## Model Settings
 
-Edit any registered model to configure:
+Edit any registered model in the UI to configure:
 
-**Runtime:**
-- Device (CPU/GPU)
-- Quantization (int4, int8)
-- Max concurrency
-- Keep-alive time
+### Runtime Settings
+- **Device**: `cpu`, `cuda`, `mps` (Metal for Mac)
+- **Quantization**: `4bit`, `8bit`, `null` (full precision)
+- **Max Concurrency**: How many parallel scans per model
+- **Keep-Alive**: Model unload timeout (Ollama)
 
-**Generation:**
-- Temperature
-- Max tokens
-- Top-p, top-k
+### Generation Settings
+- **Temperature**: `0.0-1.0` (lower = deterministic)
+- **Max Tokens**: Maximum output length
+- **Top-p**: Nucleus sampling threshold
+- **Top-k**: Token sampling limit
 
-**Provider-Specific:**
-- HuggingFace: adapter model, device_map, dtype
-- Ollama: options dict
-- Cloud: API keys, base URL
+### Provider-Specific
+- **HuggingFace**: `device_map`, `dtype`, `adapter_model`, `trust_remote_code`
+- **Ollama**: Custom `options` dict (num_ctx, num_gpu, etc.)
+- **Cloud**: API endpoint overrides, custom headers
 
 ---
 
 ## Architecture
 
 ```
-User Upload → Pipeline Executor → Models (via Registry)
-                                  ↓
-                    Parsers (JSON/Classification)
-                                  ↓
-                    Findings → SARIF/CSV Export
+┌──────────────────────────────────────────────────────────────┐
+│                         User Upload                          │
+│                    (ZIP, Code, Git Repo)                     │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    Scan Worker (Queue)                       │
+│             Background processing with SSE updates           │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────────────┐
+│                  Pipeline Executor (Chunks)                  │
+│           Parallel execution with ThreadPoolExecutor         │
+└────────┬────────────────────────────────────────────┬────────┘
+         │                                            │
+         ▼                                            ▼
+┌────────────────────┐                    ┌────────────────────┐
+│   Model Registry   │                    │   Prompt Builder   │
+│  (SQLite + Cache)  │                    │  (Role Templates)  │
+└────────┬───────────┘                    └──────────┬─────────┘
+         │                                           │
+         ▼                                           ▼
+┌──────────────────────────────────────────────────────────────┐
+│                   Provider Layer (Adapters)                  │
+│          Ollama  │  HuggingFace  │  Cloud (OpenAI, etc.)     │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    Parsers (JSON/Binary)                     │
+│         Schema validation + fallback regex extraction        │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────────────┐
+│                  Consensus Engine (Merge)                    │
+│          Union │ Majority │ Weighted │ Judge Model           │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────────────┐
+│              Database (Scans, Findings, History)             │
+│                Export: SARIF, CSV, JSON                      │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-- **Model Registry**: SQLite database (`data/aegis.db`)
-- **Providers**: Abstraction layer for Ollama/HF/Cloud
-- **Runners**: Role-based prompt builders (triage, deep_scan, etc.)
-- **Parsers**: Convert raw LLM output to structured findings
-- **Consensus**: Merge results from multiple models
+**Key Components:**
+- **Model Registry**: SQLite database with runtime caching
+- **Providers**: Unified interface for Ollama/HF/Cloud
+- **Runners**: Role-based prompt construction (triage, deep_scan, judge)
+- **Parsers**: JSON schema validation with regex fallbacks
+- **Consensus**: Multi-model result merging strategies
+- **Scan Worker**: Background queue with persistent state
 
 ---
 
@@ -283,33 +415,128 @@ User Upload → Pipeline Executor → Models (via Registry)
 
 ```
 aegis/
-├── api/              # Flask routes
-├── models/           # Registry, runtime, providers
-├── pipeline/         # Scan execution engine
-├── parsers/          # Output parsing
-├── templates/        # Web UI
-└── static/           # CSS/JS
+├── api/                  # REST API routes
+├── config/               # YAML configuration loader
+├── consensus/            # Multi-model merging strategies
+├── database/             # SQLite repositories + migrations
+│   ├── init.py          # Auto-initialization logic
+│   └── repositories.py  # Model, scan, finding repos
+├── models/               # Model registry and runtime
+│   ├── registry.py      # ModelRegistryV2 (persistent)
+│   ├── runtime.py       # Model loading + caching
+│   ├── runners/         # Role-based execution
+│   └── providers/       # Ollama, HF, Cloud adapters
+├── parsers/              # JSON/binary output parsers
+├── pipeline/             # Scan execution engine
+├── services/             # Scan worker + background queue
+├── static/               # Web UI assets (CSS/JS)
+└── templates/            # Jinja2 HTML templates
 
-config/models.yaml    # Model presets
-data/aegis.db         # Registry database
+config/models.yaml        # Model presets (seeded on init)
+data/aegis.db             # SQLite database (auto-created)
+requirements/             # Dependency files by use case
 ```
 
-### Requirements
+### Adding a New Provider
 
-- **Minimal** (cloud only): `pip install -r requirements/requirements-minimal.txt` (~100MB)
-- **Standard** (CPU): `pip install -r requirements/requirements.txt` (~3.5GB)
-- **GPU** (CUDA 11.8): `pip install -r requirements/requirements-gpu.txt` (~5GB)
+1. Create provider adapter in `aegis/models/providers/`:
+```python
+from aegis.models.providers.base import BaseProvider
 
-See [requirements/REQUIREMENTS.md](requirements/REQUIREMENTS.md) for details.
+class MyProvider(BaseProvider):
+    def generate(self, prompt: str, **kwargs) -> str:
+        # Your implementation
+        pass
+```
+
+2. Register in `aegis/models/provider_factory.py`:
+```python
+def create_provider(model: ModelRecord) -> BaseProvider:
+    if model.model_type == ModelType.MY_PROVIDER:
+        return MyProvider(model.model_name, model.settings)
+    # ...
+```
+
+3. Add to database schema in `aegis/database/schema.sql` (if needed)
+
+4. Create YAML preset in `config/models.yaml`
+
+### Running Tests
+
+```bash
+pytest tests/ -v
+```
+
+### Database Migrations
+
+Add new migration in `aegis/database/migrations/`:
+```sql
+-- 005_my_feature.sql
+ALTER TABLE models ADD COLUMN new_field TEXT;
+```
+
+Apply manually:
+```bash
+python scripts/migrate_to_v2.py
+```
+
+Or automatically on next startup (if `aegis/database/__init__.py` includes migration logic).
 
 ---
 
-## Contributing
+## Troubleshooting
 
-Pull requests welcome! Please:
-- Follow existing code style
-- Add tests for new features
-- Update documentation
+### Database Issues
+
+**Problem**: "Database locked" error
+**Solution**: Only one Aegis instance can run at a time. Stop other instances or use separate databases with `AEGIS_DB_PATH` env var.
+
+**Problem**: "No providers found"
+**Solution**: Database auto-initializes on first run. If it fails, manually run `python scripts/migrate_to_v2.py`
+
+### Model Loading
+
+**Problem**: HuggingFace models fail to load
+**Solution**:
+- Ensure 8GB+ RAM available (16GB recommended)
+- Use 4-bit quantization: `"quantization": "4bit"`
+- Check CUDA availability: `python -c "import torch; print(torch.cuda.is_available())"`
+
+**Problem**: Ollama models not detected
+**Solution**:
+- Verify Ollama is running: `curl http://localhost:11434/api/tags`
+- Set custom URL: `OLLAMA_BASE_URL=http://192.168.1.100:11434 python app.py`
+
+**Problem**: Cloud LLMs return prose instead of JSON
+**Solution**:
+- Update to latest version (system prompts added)
+- Lower temperature to 0.1 or 0.0
+- Use `json_schema` parser (auto-validates)
+
+### Scan Errors
+
+**Problem**: Scans stuck at "Running"
+**Solution**:
+- Check browser console for SSE connection errors
+- Verify model is loaded (first scan may take 1-2 minutes)
+- Check `logs/aegis.log` for detailed errors
+
+**Problem**: "asyncio event loop" errors
+**Solution**: Fixed in latest version. Cloud providers now use ThreadPoolExecutor isolation.
+
+**Problem**: High memory usage
+**Solution**:
+- Use quantization for HF models
+- Reduce `max_concurrency` to 1
+- Use smaller models (7B instead of 13B+)
+
+### API Rate Limits
+
+**Problem**: Cloud API rate limit errors
+**Solution**:
+- Default rate limits are conservative (5 req/sec)
+- Edit provider config in database to increase
+- Use Ollama/HF for high-throughput scanning
 
 ---
 
@@ -319,21 +546,13 @@ MIT License - see [LICENSE](LICENSE)
 
 ---
 
-## Troubleshooting
+## Contributing
 
-**Cloud LLMs return prose instead of JSON?**
-- Make sure you're using the latest version (system prompts fix)
-- Temperature should be 0.1 or lower
-
-**Models not loading?**
-- Check `logs/aegis.log` for errors
-- Verify API keys are set correctly
-- HuggingFace models need ~8GB RAM minimum
-
-**Scan stuck?**
-- Check model status in UI
-- Some models take time to load (first run)
-- Check console for rate limit errors (cloud APIs)
+Pull requests welcome! Please:
+- Follow existing code style (PEP 8)
+- Add type hints to new functions
+- Update documentation for new features
+- Test with multiple providers (Ollama + Cloud)
 
 ---
 
