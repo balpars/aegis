@@ -68,9 +68,121 @@ Open: http://localhost:5000
 
 ### HuggingFace (Local)
 
+**Quick Start (UI):**
 1. In Aegis UI → **Models** → **HUGGING_FACE**
 2. Click **Register** on CodeBERT or CodeAstra
 3. Models download automatically on first use
+
+**Adding Custom HuggingFace Models:**
+
+You can add any HuggingFace model for security scanning. Here's how:
+
+#### Via API (Recommended)
+
+```bash
+curl -X POST http://localhost:5000/api/models/registry \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_type": "hf_local",
+    "provider_id": "huggingface",
+    "model_name": "your-org/your-model-name",
+    "display_name": "Your Model Display Name",
+    "roles": ["deep_scan"],
+    "parser_id": "json_schema",
+    "settings": {
+      "task_type": "text-generation",
+      "runtime": {
+        "device_preference": ["cuda", "cpu"],
+        "dtype": "bf16",
+        "quantization": "4bit",
+        "max_concurrency": 1
+      },
+      "generation_kwargs": {
+        "max_new_tokens": 512,
+        "min_new_tokens": 50,
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "do_sample": true
+      }
+    }
+  }'
+```
+
+#### Via Code (config/models.yaml)
+
+Add to your `config/models.yaml`:
+
+```yaml
+models:
+  - model_id: "hf:your_model"
+    model_type: "hf_local"
+    provider_id: "huggingface"
+    model_name: "your-org/your-model-name"
+    display_name: "Your Model Display Name"
+    roles:
+      - deep_scan
+    parser_id: "json_schema"
+    settings:
+      task_type: "text-generation"
+      runtime:
+        device_preference: ["cuda", "cpu"]
+        dtype: "bf16"
+        quantization: "4bit"
+      generation_kwargs:
+        max_new_tokens: 512
+        temperature: 0.2
+```
+
+Then run: `python scripts/migrate_to_v2.py`
+
+#### Via Python Code
+
+```python
+from aegis.models.registry import ModelRegistryV2
+from aegis.models.schema import ModelType, ModelRole
+
+registry = ModelRegistryV2()
+registry.register_model(
+    model_id="hf:your_model",
+    model_type=ModelType.HF_LOCAL,
+    provider_id="huggingface",
+    model_name="your-org/your-model-name",
+    display_name="Your Model Display Name",
+    roles=[ModelRole.DEEP_SCAN],
+    parser_id="json_schema",
+    settings={
+        "task_type": "text-generation",
+        "runtime": {
+            "device_preference": ["cuda", "cpu"],
+            "dtype": "bf16",
+            "quantization": "4bit",
+        },
+        "generation_kwargs": {
+            "max_new_tokens": 512,
+            "temperature": 0.2,
+        }
+    }
+)
+```
+
+#### Popular Models for Security Scanning
+
+| Model | HuggingFace ID | Best For |
+|-------|----------------|----------|
+| CodeBERT | `microsoft/codebert-base` | Triage (fast classification) |
+| CodeT5 | `Salesforce/codet5-base` | Code understanding |
+| StarCoder | `bigcode/starcoder` | Deep analysis |
+| CodeLlama | `codellama/CodeLlama-7b-hf` | General security |
+| DeepSeek Coder | `deepseek-ai/deepseek-coder-6.7b-base` | Vulnerability detection |
+
+#### Key Settings Explained
+
+- **device_preference**: `["cuda", "cpu"]` - Try GPU first, fallback to CPU
+- **dtype**: `"bf16"`, `"fp16"`, `"fp32"` - Model precision (bf16 recommended for modern GPUs)
+- **quantization**: `"4bit"`, `"8bit"`, `null` - Reduce memory usage (4bit uses ~2GB for 7B model)
+- **max_new_tokens**: Maximum output length
+- **temperature**: 0.0-1.0 (lower = more deterministic, 0.1-0.2 recommended for security)
+- **task_type**: `"text-generation"` or `"text-classification"` (depends on model)
 
 ### Cloud LLMs
 
