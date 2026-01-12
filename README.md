@@ -1,43 +1,91 @@
 <div align="center">
   <img src="aegis/static/img/aegis-logo.svg" alt="aegis logo" width="200"/>
   <h1>Aegis - AI-Powered SAST Framework</h1>
-  <p>Multi-model security scanning with LLMs - Local & Cloud</p>
+  <p>Multi-model security scanning with LLMs, ML, AI (Local & Cloud) </p>
 </div>
 
 ---
 
 ## Demos
 
-[![Demo Video (Ollama)](https://img.youtube.com/vi/StXTwdxQyQI/0.jpg)](https://youtu.be/StXTwdxQyQI)
+[![Demo Video (Ollama)](https://img.youtube.com/vi/YsyRN238z_A/0.jpg)](https://youtu.be/YsyRN238z_A)
 
-- **Ollama (Local)**: https://youtu.be/StXTwdxQyQI
-- **Cloud AI & HuggingFace**: Coming soon
-
+- **Aegis v1 (of the vulnerable)**: https://youtu.be/ZmT-3UpVOz8
+- Legacy version: https://youtu.be/StXTwdxQyQI
 ---
 
-## Features
+## About
 
-### Core Capabilities
-- **Multi-Provider Support**: Ollama, HuggingFace, OpenAI, Anthropic, Google Gemini
-- **Zero Configuration**: Auto-initializes database on first run
-- **Real-Time Scanning**: Server-sent events for live progress updates
-- **Background Processing**: Non-blocking scans with persistent queue
-- **Model Registry**: SQLite-based persistent model storage
+This open-source framework is the practical culmination of theoretical research into multi-model orchestration, designed to bridge the gap between generative and discriminative AI. Rather than being limited to a single model family, it provides a standardized infrastructure to integrate, benchmark, and compare a diverse range of architectures—from Large Language Models (OpenAI, Anthropic, Gemini, Ollama) to specialized NLP classifiers like BERT and RoBERTa via HuggingFace. By treating every model as a pluggable component within a unified registry, the framework enables complex workflows such as consensus-based decision making, multi-layered scanning, and cross-architecture validation. It features a non-blocking background processing engine, real-time status updates via SSE, and native support for runtime optimizations like 4-bit/8-bit quantization.
 
-### Advanced Features
-- **Consensus Strategies**: Union, majority, weighted, judge-based merging
-- **Role-Based Scanning**: Triage, deep scan, judge, explain
-- **Runtime Control**: CPU/GPU selection, quantization (4-bit/8-bit), concurrency limits
-- **Smart Parsing**: JSON schema validation with fallback handling
-- **Scan History**: Persistent database with full result tracking
-- **Export Formats**: SARIF and CSV for CI/CD integration
+## Architecture
 
-### Developer Experience
-- **Web UI + REST API**: Full-featured interface and programmatic access
-- **HuggingFace Integration**: Local model execution with auto-download
-- **Cloud LLM Support**: Optimized prompts for GPT, Claude, Gemini
-- **Flexible Configuration**: YAML presets, API registration, or Python SDK
+```
+┌──────────────────────────────────────────────────────────────┐
+│                         User Upload                          │
+│                    (ZIP, Code, Git Repo)                     │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    Scan Worker (Queue)                       │
+│             Background processing with SSE updates           │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────────────┐
+│                  Pipeline Executor (Chunks)                  │
+│           Parallel execution with ThreadPoolExecutor         │
+└────────┬────────────────────────────────────────────┬────────┘
+         │                                            │
+         ▼                                            ▼
+┌────────────────────┐                    ┌────────────────────┐
+│   Model Registry   │                    │   Prompt Builder   │
+│  (SQLite + Cache)  │                    │  (Role Templates)  │
+└────────┬───────────┘                    └──────────┬─────────┘
+         │                                           │
+         ▼                                           ▼
+┌──────────────────────────────────────────────────────────────┐
+│                   Provider Layer (Adapters)                  │
+│          Ollama  │  HuggingFace  │  Cloud (OpenAI, etc.)     │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    Parsers (JSON/Binary)                     │
+│         Schema validation + fallback regex extraction        │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────────────┐
+│                  Consensus Engine (Merge)                    │
+│          Union │ Majority │ Weighted │ Judge Model           │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────────────┐
+│              Database (Scans, Findings, History)             │
+│                Export: SARIF, CSV, JSON                      │
+└──────────────────────────────────────────────────────────────┘
+```
 
+
+
+## Consensus Strategies
+
+Aegis can combine results from multiple models using different strategies:
+
+### Union (Default)
+Combines all findings from all models. Best for maximum coverage.
+
+### Majority
+Only includes findings detected by 2 or more models. Reduces false positives.
+
+### Judge
+Uses a dedicated "judge" model to evaluate and merge findings from other models.
+
+### Weighted (TODO)
+Filters findings based on confidence scores. Configurable threshold.
 ---
 
 ## Quick Start
@@ -163,19 +211,6 @@ models:
 
 ### Cloud LLMs (OpenAI, Anthropic, Google)
 
-**Setup API Keys:**
-```bash
-# Windows
-set OPENAI_API_KEY=sk-...
-set ANTHROPIC_API_KEY=sk-ant-...
-set GOOGLE_API_KEY=...
-
-# Linux/Mac
-export OPENAI_API_KEY=sk-...
-export ANTHROPIC_API_KEY=sk-ant-...
-export GOOGLE_API_KEY=...
-```
-
 **Register via API:**
 ```bash
 # OpenAI GPT-4o mini
@@ -295,33 +330,8 @@ curl http://localhost:5000/api/scans/{scan_id}/export/csv -o results.csv
 
 ---
 
-## Consensus Strategies
 
-Aegis can combine results from multiple models using different strategies:
 
-### Union (Default)
-Combines all findings from all models. Best for maximum coverage.
-
-### Majority
-Only includes findings detected by 2 or more models. Reduces false positives.
-
-### Weighted
-Filters findings based on confidence scores. Configurable threshold.
-
-### Judge
-Uses a dedicated "judge" model to evaluate and merge findings from other models.
-
-**Example with Judge:**
-```bash
-curl -X POST http://localhost:5000/api/scans/upload \
-  -F "files=@app.py" \
-  -F "model_ids=ollama:llama3.2" \
-  -F "model_ids=hf:deepseek_coder" \
-  -F "consensus_strategy=judge" \
-  -F "judge_model_id=anthropic:claude-3-5-sonnet-20241022"
-```
-
-The judge model receives all findings and decides which are valid, merges duplicates, and assigns final severity.
 
 ---
 
@@ -346,68 +356,6 @@ Edit any registered model in the UI to configure:
 - **Ollama**: Custom `options` dict (num_ctx, num_gpu, etc.)
 - **Cloud**: API endpoint overrides, custom headers
 
----
-
-## Architecture
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│                         User Upload                          │
-│                    (ZIP, Code, Git Repo)                     │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    Scan Worker (Queue)                       │
-│             Background processing with SSE updates           │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│                  Pipeline Executor (Chunks)                  │
-│           Parallel execution with ThreadPoolExecutor         │
-└────────┬────────────────────────────────────────────┬────────┘
-         │                                            │
-         ▼                                            ▼
-┌────────────────────┐                    ┌────────────────────┐
-│   Model Registry   │                    │   Prompt Builder   │
-│  (SQLite + Cache)  │                    │  (Role Templates)  │
-└────────┬───────────┘                    └──────────┬─────────┘
-         │                                           │
-         ▼                                           ▼
-┌──────────────────────────────────────────────────────────────┐
-│                   Provider Layer (Adapters)                  │
-│          Ollama  │  HuggingFace  │  Cloud (OpenAI, etc.)     │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    Parsers (JSON/Binary)                     │
-│         Schema validation + fallback regex extraction        │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│                  Consensus Engine (Merge)                    │
-│          Union │ Majority │ Weighted │ Judge Model           │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│              Database (Scans, Findings, History)             │
-│                Export: SARIF, CSV, JSON                      │
-└──────────────────────────────────────────────────────────────┘
-```
-
-**Key Components:**
-- **Model Registry**: SQLite database with runtime caching
-- **Providers**: Unified interface for Ollama/HF/Cloud
-- **Runners**: Role-based prompt construction (triage, deep_scan, judge)
-- **Parsers**: JSON schema validation with regex fallbacks
-- **Consensus**: Multi-model result merging strategies
-- **Scan Worker**: Background queue with persistent state
-
----
 
 ## Development
 
@@ -461,28 +409,6 @@ def create_provider(model: ModelRecord) -> BaseProvider:
 
 4. Create YAML preset in `config/models.yaml`
 
-### Running Tests
-
-```bash
-pytest tests/ -v
-```
-
-### Database Migrations
-
-Add new migration in `aegis/database/migrations/`:
-```sql
--- 005_my_feature.sql
-ALTER TABLE models ADD COLUMN new_field TEXT;
-```
-
-Apply manually:
-```bash
-python scripts/migrate_to_v2.py
-```
-
-Or automatically on next startup (if `aegis/database/__init__.py` includes migration logic).
-
----
 
 ## Troubleshooting
 
@@ -553,7 +479,3 @@ Pull requests welcome! Please:
 - Add type hints to new functions
 - Update documentation for new features
 - Test with multiple providers (Ollama + Cloud)
-
----
-
-**Made with ❤️ for security researchers**
