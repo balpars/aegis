@@ -116,8 +116,6 @@ python app.py
 
 Database auto-initializes on first run. Open: **http://localhost:5000**
 
-That's it! No manual setup required.
-
 ---
 
 ## Using Models
